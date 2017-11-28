@@ -8,7 +8,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Csrf\CsrfToken;
 
 /**
  * @Route("/courses")
@@ -27,40 +26,38 @@ class CourseController extends Controller
     }
 
     /**
-     * @Route("/edit", name="course_edit")
+     * @Route("/edit/{id}", name="course_edit", requirements={"id"="\d+"})
      */
-    public function editAction(Request $request)
+    public function editAction(Request $request, Course $course)
     {
-        if (!$course = $this->getDoctrine()->getRepository(Course::class)->find($request->request->get('course_id'))) {
-            $this->addFlash('error', 'This course do not exist');
-        } else {
-            $thumbnail = $course->getThumbnail();
-            $courseForm = $this->createForm(CourseType::class, $course);
+        $thumbnail = $course->getThumbnail();
+        $courseForm = $this->createForm(CourseType::class, $course);
 
-            $courseForm->handleRequest($request);
+        $courseForm->handleRequest($request);
 
-            if($courseForm->isSubmitted() && $courseForm->isValid()) {
-                $course = $courseForm->getData();
+        if($courseForm->isSubmitted() && $courseForm->isValid()) {
+            $course = $courseForm->getData();
 
-                if (!is_null($course->getThumbnail())) {
-                    $file = $course->getThumbnail();
-                    $filename = uniqid() . '-' . $file->getClientOriginalName();
-                    $path = $this->getParameter('kernel.root_dir') . '/../web/uploads';
-                    $file->move($path, $filename);
+            if (!is_null($course->getThumbnail())) {
+                $file = $course->getThumbnail();
+                $filename = uniqid() . '-' . $file->getClientOriginalName();
+                $path = $this->getParameter('kernel.root_dir') . '/../web/uploads';
+                $file->move($path, $filename);
 
-                    $course->setThumbnail('uploads/' . $filename);
-                } else {
-                    $course->setThumbnail($thumbnail);
-                }
-
-                $em = $this->getDoctrine()->getManager();
-                $em->persist($course);
-                $em->flush();
-
-                $this->addFlash('success', "GG ! The course has been edited.");
-                return $this->redirectToRoute('courses');
+                $course->setThumbnail('uploads/' . $filename);
+            } else {
+                $course->setThumbnail($thumbnail);
             }
+
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($course);
+            $em->flush();
+
+            $this->addFlash('success', "GG ! The course has been edited.");
+            return $this->redirectToRoute('courses');
         }
+
+
         return $this->render('course/create.html.twig', [
             'courseForm' => $courseForm->createView()
         ]);
