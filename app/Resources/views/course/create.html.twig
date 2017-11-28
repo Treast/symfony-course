@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ parent() }}
+    Create course
+{% endblock %}
+
+{% block content %}
+    {#{{ form(courseForm) }}#}
+    {{ form_start(courseForm, { 'attr': { 'novalidate': 'novalidate' } }) }}
+        {{ form_row(courseForm) }}
+    {{ form_end(courseForm) }}
+{% endblock %}
