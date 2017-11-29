@@ -16,15 +16,17 @@
                 <h2 class="card-title">{{ course.title }}</h2>
                 <p class="card-text">{{ course.description }}</p>
                 <a href="{{ path('course_edit', {"id": course.id}) }}" class="btn btn-warning btn-xs pull-left">Edit</a>
-                <form action="{{ path('course_delete') }}" method="POST">
-                    <input type="hidden" name="course_id" value="{{ course.id }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token('delete_course') }}">
-                    <button class="btn btn-danger btn-xs pull-right">Delete</button>
-                </form>
+                {% if is_granted('delete', course) %}
+                    <form action="{{ path('course_delete') }}" method="POST">
+                        <input type="hidden" name="course_id" value="{{ course.id }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token('delete_course') }}">
+                        <button class="btn btn-danger btn-xs pull-right">Delete</button>
+                    </form>
+                {% endif %}
             </div>
             <div class="card-footer text-muted">
                 Posted on {{ course.postedAt | date('d/m/Y') }} by
-                <a href="#">{{ course.author }}</a>
+                <a href="#">{{ course.author.username }}</a>
             </div>
         </div>
     {% endfor %}

@@ -33,18 +33,25 @@ class Course
 
     /**
      * @ORM\Column(nullable=true)
-     * @Assert\Image(maxHeight=300, maxWidth=750)
      */
     private $thumbnail;
+
+    /**
+     * @Assert\Image(maxHeight=300, maxWidth=750)
+     * @Assert\NotBlank(groups={"create"})
+     */
+    private $thumbnailFile;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $postedAt;
 
+    private $author_id;
+
     /**
-     * @ORM\Column
-     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="User")
+     * @ORM\JoinColumn(name="author_id", referencedColumnName="id")
      */
     private $author;
 
@@ -102,6 +109,40 @@ class Course
     public function setThumbnail($thumbnail)
     {
         $this->thumbnail = $thumbnail;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAuthorId()
+    {
+        return $this->author_id;
+    }
+
+    /**
+     * @param mixed $author_id
+     */
+    public function setAuthorId($author_id)
+    {
+        $this->author_id = $author_id;
+    }
+
+
+
+    /**
+     * @return mixed
+     */
+    public function getThumbnailFile()
+    {
+        return $this->thumbnailFile;
+    }
+
+    /**
+     * @param mixed $thumbnailFile
+     */
+    public function setThumbnailFile($thumbnailFile)
+    {
+        $this->thumbnailFile = $thumbnailFile;
     }
 
     /**

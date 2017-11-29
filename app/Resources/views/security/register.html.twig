@@ -1,0 +1,12 @@
+{% extends 'security/base.html.twig' %}
+
+{% block title %}
+    {{ parent() }}
+    Create account
+{% endblock %}
+
+{% block content %}
+    {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+        {{ form_row(form) }}
+    {{ form_end(form) }}
+{% endblock %}

@@ -8,6 +8,9 @@
 {% block content %}
     {#{{ form(courseForm) }}#}
     {{ form_start(courseForm, { 'attr': { 'novalidate': 'novalidate' } }) }}
+        {% if app.request.attributes.get('_route') == 'course_edit' %}
+            <img src="{{ asset(course.thumbnail) }}" alt="">
+        {% endif %}
         {{ form_row(courseForm) }}
     {{ form_end(courseForm) }}
 {% endblock %}

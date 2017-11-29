@@ -3,11 +3,13 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Course;
+use AppBundle\File\Uploader;
 use AppBundle\Type\CourseType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Csrf\CsrfToken;
 
 /**
  * @Route("/courses")
@@ -28,7 +30,7 @@ class CourseController extends Controller
     /**
      * @Route("/edit/{id}", name="course_edit", requirements={"id"="\d+"})
      */
-    public function editAction(Request $request, Course $course)
+    public function editAction(Request $request, Course $course, Uploader $uploader)
     {
         $thumbnail = $course->getThumbnail();
         $courseForm = $this->createForm(CourseType::class, $course);
@@ -38,19 +40,14 @@ class CourseController extends Controller
         if($courseForm->isSubmitted() && $courseForm->isValid()) {
             $course = $courseForm->getData();
 
-            if (!is_null($course->getThumbnail())) {
-                $file = $course->getThumbnail();
-                $filename = uniqid() . '-' . $file->getClientOriginalName();
-                $path = $this->getParameter('kernel.root_dir') . '/../web/uploads';
-                $file->move($path, $filename);
-
-                $course->setThumbnail('uploads/' . $filename);
-            } else {
-                $course->setThumbnail($thumbnail);
+            if ($file = $course->getThumbnailFile()) {
+                $pathFile = $uploader->upload($file);
+                $course->setThumbnail($pathFile);
             }
 
+            $course->setAuthor($this->getUser());
+
             $em = $this->getDoctrine()->getManager();
-            $em->persist($course);
             $em->flush();
 
             $this->addFlash('success', "GG ! The course has been edited.");
@@ -59,7 +56,8 @@ class CourseController extends Controller
 
 
         return $this->render('course/create.html.twig', [
-            'courseForm' => $courseForm->createView()
+            'courseForm' => $courseForm->createView(),
+            'course' => $course
         ]);
     }
 
@@ -73,6 +71,8 @@ class CourseController extends Controller
         } else {
             $csrfToken = new CsrfToken('delete_course', $request->request->get('csrf_token'));
 
+            $this->denyAccessUnlessGranted('delete', $course);
+
             if ($this->get('security.csrf.token_manager')->isTokenValid($csrfToken)) {
                 $em = $this->getDoctrine()->getManager();
                 $em->remove($course);
@@ -82,29 +82,26 @@ class CourseController extends Controller
                 $this->addFlash('danger', "Csrf token not valid.");
             }
         }
-
         return $this->redirectToRoute('courses');
     }
 
     /**
      * @Route("/create", name="courses_create")
      */
-    public function createAction(Request $request)
+    public function createAction(Request $request, Uploader $uploader)
     {
         $course = new Course();
-        $courseForm = $this->createForm(CourseType::class, $course);
+        $courseForm = $this->createForm(CourseType::class, $course, ['validation_groups' => ['create', 'Default']]);
 
         $courseForm->handleRequest($request);
 
         if($courseForm->isSubmitted() && $courseForm->isValid()) {
             $course = $courseForm->getData();
 
-            $file = $course->getThumbnail();
-            $filename = uniqid() . '-' . $file->getClientOriginalName();
-            $path = $this->getParameter('kernel.root_dir') . '/../web/uploads';
-            $file->move($path, $filename);
+            $pathFile = $uploader->upload($course->getThumbnailFile());
+            $course->setThumbnail($pathFile);
 
-            $course->setThumbnail('uploads/' . $filename);
+            $course->setAuthor($this->getUser());
 
             $em = $this->getDoctrine()->getManager();
             $em->persist($course);

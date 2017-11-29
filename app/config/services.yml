@@ -29,6 +29,13 @@ services:
         public: true
         tags: ['controller.service_arguments']
 
+    AppBundle\File\Uploader:
+        arguments:
+            $pathToUploadFolder: '%path_upload_folder%'
+            $absolutePathWebFolder: '%absolute_path_upload_folder%'
+
+    AppBundle\Voter\CourseVoter:
+        tags: ['security.voter']
     # add more services, or override services that need manual wiring
     # AppBundle\Service\ExampleService:
     #     arguments:
